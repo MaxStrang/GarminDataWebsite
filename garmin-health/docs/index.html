@@ -4,9 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
-  <meta name="theme-color" content="#121211">
+  <meta name="theme-color" content="#0f1620">
   <title>Hälsa</title>
   <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
@@ -14,64 +17,137 @@
   <!-- Låsskärm -->
   <section id="lock" class="lock">
     <form id="lockForm" class="lock-card">
+      <svg class="lock-mark" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="28" /><circle cx="32" cy="32" r="20" /><circle cx="32" cy="32" r="12" />
+      </svg>
       <h1>Hälsa</h1>
-      <p class="muted">Datan är krypterad. Ange ditt lösenord.</p>
+      <p class="muted">Din träning, sömn och återhämtning. Datan är krypterad, så ange ditt lösenord.</p>
+      <label class="sr" for="pw">Lösenord</label>
       <input id="pw" type="password" autocomplete="current-password" placeholder="Lösenord" required>
       <label class="check"><input id="remember" type="checkbox" checked> Kom ihåg på den här enheten</label>
       <button type="submit">Lås upp</button>
-      <p id="lockErr" class="err" hidden>Fel lösenord eller ingen data ännu.</p>
+      <p id="lockErr" class="err" hidden>Det gick inte att låsa upp. Kontrollera lösenordet, eller vänta tills första uppdateringen är klar.</p>
     </form>
   </section>
 
-  <main id="app" hidden>
-    <header class="top">
-      <div>
-        <h1>Hälsa</h1>
-        <p class="muted" id="updated"></p>
+  <div id="app" class="shell" hidden>
+    <!-- Sidopanel -->
+    <aside class="side">
+      <div class="brand">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28" /><circle cx="32" cy="32" r="20" /><circle cx="32" cy="32" r="12" /></svg>
+        <span>Hälsa</span>
       </div>
-      <div class="controls">
-        <div class="seg" id="range" role="group" aria-label="Tidsperiod">
-          <button data-days="7">7 d</button>
-          <button data-days="30" class="on">30 d</button>
-          <button data-days="90">90 d</button>
+      <nav class="nav" id="nav">
+        <a href="#oversikt">Översikt</a>
+        <a href="#traning">Träning</a>
+        <a href="#somn">Sömn</a>
+        <a href="#aterhamtning">Återhämtning</a>
+        <a href="#nord">Nördhörnan</a>
+        <a href="#aktiviteter">Aktiviteter</a>
+      </nav>
+      <section class="coach" aria-label="Coach">
+        <h2>Coachen säger</h2>
+        <ul id="coach"></ul>
+      </section>
+      <footer class="side-foot">
+        <span id="updated"></span>
+        <button id="logout" class="link">Lås sidan</button>
+      </footer>
+    </aside>
+
+    <main>
+      <div class="toolbar">
+        <div class="seg" id="range" role="group" aria-label="Period för diagrammen">
+          <button data-days="7">7 dagar</button>
+          <button data-days="30" class="on">30 dagar</button>
+          <button data-days="90">90 dagar</button>
           <button data-days="365">1 år</button>
         </div>
-        <button id="logout" class="ghost" title="Lås">Lås</button>
       </div>
-    </header>
 
-    <section class="tiles" id="tiles"></section>
+      <!-- Översikt -->
+      <section id="oversikt" class="sec">
+        <div class="hero">
+          <div class="hero-text">
+            <p class="greet" id="greet"></p>
+            <h1 id="headline"></h1>
+            <p class="lede" id="lede"></p>
+          </div>
+          <div class="rings" id="rings"></div>
+        </div>
+        <div class="coach-mobile"><h2>Coachen säger</h2><ul id="coachMobile"></ul></div>
+        <div class="today" id="tiles"></div>
+        <figure class="panel">
+          <figcaption>Träningsåret <span>minuter per dag, de senaste 53 veckorna</span></figcaption>
+          <div class="heat-wrap"><div class="heat" id="heat"></div></div>
+          <div class="heat-legend" id="heatLegend"></div>
+        </figure>
+      </section>
 
-    <h2>Träning</h2>
-    <div class="grid">
-      <figure class="card wide"><figcaption>Träningstid per vecka <span>minuter</span></figcaption><div class="plot"><canvas id="cTraining"></canvas></div></figure>
-      <figure class="card"><figcaption>Steg per dag <span>streckad linje = mål</span></figcaption><div class="plot"><canvas id="cSteps"></canvas></div></figure>
-      <figure class="card"><figcaption>Intensitetsminuter <span>per dag</span></figcaption><div class="plot"><canvas id="cIntensity"></canvas></div></figure>
-    </div>
+      <!-- Träning -->
+      <section id="traning" class="sec">
+        <h2 class="sec-title">Träning</h2>
+        <div class="grid">
+          <figure class="panel wide"><figcaption>Träningstid per vecka <span>minuter, per aktivitetstyp</span></figcaption><div class="plot"><canvas id="cTraining"></canvas></div></figure>
+          <figure class="panel"><figcaption>Tid i pulszoner <span>minuter per vecka, zon 1 lugnast</span></figcaption><div class="plot"><canvas id="cZones"></canvas></div></figure>
+          <figure class="panel"><figcaption>Löptempo <span>min/km per pass, snabbare uppåt</span></figcaption><div class="plot"><canvas id="cPace"></canvas></div></figure>
+          <figure class="panel"><figcaption>Steg per dag <span>staplar per dag, linje = 7-dagarssnitt</span></figcaption><div class="plot"><canvas id="cSteps"></canvas></div></figure>
+          <figure class="panel"><figcaption>VO2max <span>uppskattning från löppass</span></figcaption><div class="plot"><canvas id="cVo2"></canvas></div></figure>
+        </div>
+      </section>
 
-    <h2>Sömn</h2>
-    <div class="grid">
-      <figure class="card"><figcaption>Sömnfaser <span>timmar</span></figcaption><div class="plot"><canvas id="cSleep"></canvas></div></figure>
-      <figure class="card"><figcaption>Sömnpoäng <span>0–100</span></figcaption><div class="plot"><canvas id="cSleepScore"></canvas></div></figure>
-    </div>
+      <!-- Sömn -->
+      <section id="somn" class="sec">
+        <h2 class="sec-title">Sömn</h2>
+        <div class="grid">
+          <figure class="panel"><figcaption>Sömnfaser <span>timmar per natt</span></figcaption><div class="plot"><canvas id="cSleep"></canvas></div></figure>
+          <figure class="panel"><figcaption>Sovtider <span>från läggdags till uppvaknande</span></figcaption><div class="plot"><canvas id="cSchedule"></canvas></div></figure>
+          <figure class="panel"><figcaption>Sömnpoäng <span>0–100, linje = 7-dagarssnitt</span></figcaption><div class="plot"><canvas id="cSleepScore"></canvas></div></figure>
+          <figure class="panel stat-panel" id="sleepStats"></figure>
+        </div>
+      </section>
 
-    <h2>Hälsa</h2>
-    <div class="grid">
-      <figure class="card"><figcaption>Vilopuls <span>slag/min</span></figcaption><div class="plot"><canvas id="cRHR"></canvas></div></figure>
-      <figure class="card"><figcaption>HRV <span>ms, nattsnitt</span></figcaption><div class="plot"><canvas id="cHRV"></canvas></div></figure>
-      <figure class="card"><figcaption>Body Battery <span>lägsta–högsta per dag</span></figcaption><div class="plot"><canvas id="cBB"></canvas></div></figure>
-      <figure class="card"><figcaption>Stress <span>dagssnitt</span></figcaption><div class="plot"><canvas id="cStress"></canvas></div></figure>
-    </div>
+      <!-- Återhämtning -->
+      <section id="aterhamtning" class="sec">
+        <h2 class="sec-title">Återhämtning</h2>
+        <div class="grid">
+          <figure class="panel"><figcaption>Vilopuls <span>slag/min, linje = 7-dagarssnitt</span></figcaption><div class="plot"><canvas id="cRHR"></canvas></div></figure>
+          <figure class="panel"><figcaption>HRV <span>ms nattsnitt, linje = 7-dagarssnitt</span></figcaption><div class="plot"><canvas id="cHRV"></canvas></div></figure>
+          <figure class="panel"><figcaption>Body Battery <span>dagens lägsta till högsta</span></figcaption><div class="plot"><canvas id="cBB"></canvas></div></figure>
+          <figure class="panel"><figcaption>Stress <span>dagssnitt</span></figcaption><div class="plot"><canvas id="cStress"></canvas></div></figure>
+        </div>
+      </section>
 
-    <h2>Senaste aktiviteter</h2>
-    <div class="card table-wrap">
-      <table id="acts">
-        <thead><tr><th>Datum</th><th>Aktivitet</th><th class="num">Distans</th><th class="num">Tid</th><th class="num">Snittpuls</th><th class="num">kcal</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </main>
+      <!-- Nördhörnan -->
+      <section id="nord" class="sec">
+        <h2 class="sec-title">Nördhörnan</h2>
+        <p class="sec-lede">Statistiken för vald period. Trend är lutningen på en linjär regression, omräknad till förändring per vecka.</p>
+        <div class="grid">
+          <figure class="panel wide table-panel">
+            <table class="stats" id="statsTable"></table>
+          </figure>
+          <figure class="panel" id="acwr"></figure>
+          <figure class="panel"><figcaption>Steg per veckodag <span>snitt för perioden</span></figcaption><div class="plot"><canvas id="cWeekday"></canvas></div></figure>
+          <figure class="panel"><figcaption>Sömn mot HRV <span id="r1"></span></figcaption><div class="plot"><canvas id="cCorr1"></canvas></div></figure>
+          <figure class="panel"><figcaption>Sömnpoäng mot Body Battery <span id="r2"></span></figcaption><div class="plot"><canvas id="cCorr2"></canvas></div></figure>
+          <figure class="panel wide"><figcaption>Rekord och kuriosa <span>hela historiken</span></figcaption><div class="records" id="records"></div></figure>
+        </div>
+      </section>
 
+      <!-- Aktiviteter -->
+      <section id="aktiviteter" class="sec">
+        <h2 class="sec-title">Senaste aktiviteter</h2>
+        <div class="panel table-panel">
+          <table id="acts" class="acts">
+            <thead><tr><th>Datum</th><th>Aktivitet</th><th class="num">Distans</th><th class="num">Tid</th><th class="num">Tempo</th><th class="num">Puls</th><th class="num">Load</th><th>Pulszoner</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="tip" class="tip" hidden></div>
   <script src="app.js"></script>
 </body>
 </html>

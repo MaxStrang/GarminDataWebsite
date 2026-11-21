@@ -14,7 +14,7 @@ from crypto_util import save_encrypted  # noqa: E402
 random.seed(1)
 today = date.today()
 days, acts = {}, []
-for i in range(120):
+for i in range(370):
     d = today - timedelta(days=i)
     sleep = random.randint(6 * 3600, 8 * 3600 + 1800)
     deep = int(sleep * random.uniform(.14, .22)); rem = int(sleep * random.uniform(.18, .25))
@@ -24,6 +24,8 @@ for i in range(120):
         intensityMin=random.choice([0, 10, 25, 45, 70]), sleepSec=sleep, deepSec=deep, remSec=rem,
         lightSec=sleep - deep - rem, awakeSec=random.randint(300, 2400), sleepScore=random.randint(60, 92),
         hrv=random.randint(45, 75), hrvStatus="BALANCED", readiness=random.randint(30, 95),
+        sleepStart=f"{(d - timedelta(days=1)).isoformat()}T{random.choice([22, 23, 23])}:{random.randint(0, 59):02d}",
+        sleepEnd=f"{d.isoformat()}T0{random.choice([6, 6, 7])}:{random.randint(0, 59):02d}",
     )
     if random.random() < .5:
         typ = random.choice(["running", "running", "cycling", "strength_training", "walking", "golf"])
@@ -31,7 +33,10 @@ for i in range(120):
         acts.append(dict(id=10_000 + i, name=f"Stockholm {typ}", type=typ,
                          start=f"{d.isoformat()} 07:{random.randint(10, 59)}:00",
                          distanceKm=0 if typ == "strength_training" else round(dur / random.uniform(4.5, 6.5), 2),
-                         durationMin=dur, avgHR=random.randint(110, 160), calories=dur * 9))
+                         durationMin=dur, avgHR=random.randint(110, 160), calories=dur * 9,
+                         trainingLoad=random.randint(30, 220), aerobicTE=round(random.uniform(1.5, 4.5), 1),
+                         vo2max=round(48 + (370 - i) / 120 + random.uniform(-1, 1)) if typ == "running" else None,
+                         zones=[round(dur * w, 1) for w in (.1, .3, .35, .2, .05)]))
 
 save_encrypted(str(Path(__file__).resolve().parent.parent / "store" / "data.enc"),
                {"days": days, "activities": acts, "state": {},
