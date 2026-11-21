@@ -94,6 +94,8 @@ let DAYS = 30;
 const C = {};
 const charts = {};
 let TODAY = iso(new Date());
+let HEAT = { days: 0, hours: 0, streak: 0 };
+let BEST_WEEK = { label: "", min: 0 };
 
 // Aktiviteter per dag
 function actsByDay() {
@@ -226,7 +228,8 @@ function renderHero() {
   const w = weekStats();
   $("#greet").textContent = (h < 10 ? "God morgon" : h < 18 ? "Hej" : "God kväll") + ", vecka " + isoWeek(TODAY);
   if (w.min > 0) {
-    $("#headline").innerHTML = `Du har tränat <span class="n">${Math.round(w.min)}</span> minuter den här veckan.`;
+    $("#headline").innerHTML = `Du har tränat <span class="n">0</span> minuter den här veckan.`;
+    countUp($("#headline .n"), Math.round(w.min));
     const parts = [`${w.thisW.length} pass på ${w.days} ${w.days === 1 ? "dag" : "dagar"}`];
     if (w.km > 0.5) parts.push(`${nf1.format(w.km)} km`);
     let lede = parts.join(" och ") + ".";
@@ -251,8 +254,8 @@ function renderHero() {
   const svg = rings.map((r, i) => {
     const circ = 2 * Math.PI * R[i], frac = Math.min(r.v, 1);
     return `<circle cx="100" cy="100" r="${R[i]}" fill="none" stroke="${r.c}" stroke-opacity=".18" stroke-width="${SW}"/>
-      <circle cx="100" cy="100" r="${R[i]}" fill="none" stroke="${r.c}" stroke-width="${SW}" stroke-linecap="round"
-        stroke-dasharray="${circ * frac} ${circ}" transform="rotate(-90 100 100)"><title>${r.label}: ${r.txt}</title></circle>`;
+      <circle class="ring-arc" cx="100" cy="100" r="${R[i]}" fill="none" stroke="${r.c}" stroke-width="${SW}" stroke-linecap="round"
+        stroke-dasharray="${circ}" style="--c:${circ};--off:${circ * (1 - frac)}" transform="rotate(-90 100 100)"><title>${r.label}: ${r.txt}</title></circle>`;
   }).join("");
   $("#rings").innerHTML = `<svg viewBox="0 0 200 200" role="img" aria-label="Veckans mål">${svg}</svg>
     <div class="ring-legend">${rings.map((r) => `<div><i style="background:${r.c}"></i><b>${Math.round(r.v * 100)} %</b><span>${r.label}: ${r.txt}</span></div>`).join("")}</div>`;
@@ -318,6 +321,8 @@ function renderHeat() {
     <span><b>${active}</b> träningsdagar</span>
     <span><b>${nf.format(Math.round(total / 60))}</b> timmar totalt</span>
     <span>Längsta svit: <b>${longestStreak(by, start, end)}</b> dagar</span>`;
+  HEAT = { days: active, hours: Math.round(total / 60), streak: longestStreak(by, start, end) };
+  startProfessor(HEAT);
 }
 function longestStreak(by, start, end) {
   let best = 0, cur = 0;
@@ -374,8 +379,11 @@ function renderCharts() {
         label: (c) => ` ${c.dataset.label}: ${fmtMin(c.raw)}`,
         footer: (it) => `Totalt ${fmtMin(sum(it.map((i) => i.raw)))}`,
       } } },
+      onResize: (ch) => requestAnimationFrame(() => placePushupGuy(ch)),
     },
   });
+  requestAnimationFrame(() => placePushupGuy(charts.cTraining));
+  BEST_WEEK = (() => { const t = weeks.map((_, i) => sum(groups.map((g) => M[g][i]))); const i = t.indexOf(Math.max(...t)); return { label: wLabels[i], min: t[i] || 0 }; })();
 
   // --- Pulszoner (ordinal blå skala, zon 5 ljusast) ---
   const zc = ["#1c5cab", "#2a78d6", "#5598e7", "#86b6ef", "#b7d3f6"];
@@ -604,7 +612,7 @@ function renderRecords() {
     ["Förbränt på passen", `${nf.format(Math.round(kcal))} kcal`, `ungefär ${nf.format(Math.round(kcal / 280))} kanelbullar den här månaden`],
     ["Steg i år", nf.format(yearSteps), `ungefär ${nf.format(Math.round(yearSteps * 0.75 / 1000))} km till fots`],
   ].filter(Boolean);
-  $("#records").innerHTML = R.map(([k, v, d]) => `<div><div class="k">${k}</div><div class="v">${v}</div><div class="d">${d}</div></div>`).join("");
+  $("#records").innerHTML = R.map(([k, v, d], i) => `<div data-rec="${i}" data-key="${k}"><div class="k">${k}</div><div class="v">${v}</div><div class="d">${d}</div></div>`).join("");
 }
 
 // =====================================================================
@@ -626,6 +634,40 @@ function renderActivities() {
       <td>${zbar}</td></tr>`;
   }).join("");
   $("#acts tbody").innerHTML = rows || `<tr><td colspan="8" class="muted">Inga aktiviteter än. De dyker upp här efter nästa synk.</td></tr>`;
+}
+
+// =====================================================================
+//  Professorns rundtur: komplimanger byggda av riktig data
+// =====================================================================
+function buildPraiseStops() {
+  const w = weekStats(), stops = [];
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  if (w.min > 0) stops.push({ el: "#headline", mood: "wow", text: pick([
+    `${Math.round(w.min)} minuter på en vecka! Det är ${Math.round(w.min / 150 * 100)} % av WHO:s rekommendation.`,
+    `Titta här: ${Math.round(w.min)} minuter. Jag har kontrollräknat två gånger.`,
+  ]) });
+  const streak = stepStreak(), t = DATA.days[TODAY] || {};
+  stops.push({ el: "#tiles > div:first-child", mood: streak >= 2 ? "wow" : "smile", text: streak >= 2
+    ? `${streak} dagar i rad över stegmålet. Konsekvens är den vackraste konstanten.`
+    : `${nf.format(t.steps || 0)} steg idag. Varje steg är en datapunkt i rätt riktning.` });
+  if (HEAT.days) stops.push({ el: "#heat", mood: "grimace", text: pick([
+    `${HEAT.days} träningsdagar på ett år. Det är ${Math.round(HEAT.days / 365 * 100)} % av alla dagar. Jag blir nästan rörd.`,
+    `${HEAT.hours} timmar träning. Det är ${nf1.format(HEAT.hours / 24)} dygn i sträck. Galet!`,
+  ]) });
+  if (BEST_WEEK.min > 0) stops.push({ el: "#cTraining", mood: "wow", text:
+    `Bästa veckan i perioden: ${fmtMin(BEST_WEEK.min)}. Till och med armhävningsgubben är imponerad.` });
+  const run = DATA.activities.filter(isRun).reduce((b, a) => (a.distanceKm > (b?.distanceKm || 0) ? a : b), null);
+  if (run) stops.push({ el: '[data-key="Längsta löppass"]', mood: "grimace", text:
+    `${nf1.format(run.distanceKm)} km i ett svep. Det är ${Math.round(run.distanceKm / 42.195 * 100)} % av ett maraton!` });
+  const rhr = dayRange(30).map((d) => DATA.days[d]?.restingHR ?? null), sl = slope(rhr);
+  if (sl != null && sl < 0) stops.push({ el: "#cRHR", mood: "smile", text:
+    `Vilopulsen lutar nedåt, ${nf1.format(-sl * 7)} slag per vecka. Hjärtat jobbar smartare, inte hårdare.` });
+  stops.push({ mood: "thumb happy", text: pick([
+    "Slutsats: du är statistiskt signifikant grym. p < 0,001.",
+    "Jag har granskat datan. Inga avvikelser, bara framsteg. Fortsätt så!",
+    "Min analys är klar: formen pekar uppåt. Tummen upp!",
+  ]) });
+  return stops;
 }
 
 // =====================================================================
@@ -655,6 +697,7 @@ function show(data) {
   renderHero(); renderCoach(); renderTiles(); renderHeat(); renderRecords(); renderActivities();
   renderCharts();
   setupTooltip(); setupNav();
+  document.querySelectorAll("[data-praise]").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); praiseTour(buildPraiseStops()); }));
 }
 
 $("#lockForm").addEventListener("submit", async (e) => {
