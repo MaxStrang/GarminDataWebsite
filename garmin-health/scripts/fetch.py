@@ -6,7 +6,7 @@ Körs av GitHub Actions (se .github/workflows/update.yml) men går lika bra att 
 import json
 import os
 import sys
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -25,7 +25,7 @@ TZ = ZoneInfo("Europe/Stockholm")
 
 PASSWORD = os.environ["SITE_PASSWORD"]
 BACKFILL_DAYS = int(os.environ.get("BACKFILL_DAYS", "90"))  # första körningen
-REFRESH_DAYS = 3  # dagar som hämtas om varje körning (dagens siffror ändras hela tiden)
+REFRESH_DAYS = int(os.environ.get("REFRESH_DAYS") or 3)  # dagar som hämtas om varje körning
 
 
 # ---------- inloggning ----------
@@ -96,7 +96,13 @@ def fetch_day(g: Garmin, d: str) -> dict:
 
     sl = (safe(g.get_sleep_data, d) or {}).get("dailySleepDTO") or {}
     scores = sl.get("sleepScores") or {}
+
+    def local_ts(ms):  # Garmins "Local"-tidsstämplar är lokal klocktid uttryckt som epoch-ms
+        return datetime.fromtimestamp(ms / 1000, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M") if ms else None
+
     day.update(
+        sleepStart=local_ts(sl.get("sleepStartTimestampLocal")),
+        sleepEnd=local_ts(sl.get("sleepEndTimestampLocal")),
         sleepSec=sl.get("sleepTimeSeconds"),
         deepSec=sl.get("deepSleepSeconds"),
         lightSec=sl.get("lightSleepSeconds"),
@@ -131,6 +137,10 @@ def fetch_activities(g: Garmin, limit: int) -> list:
             "calories": a.get("calories"),
             "elevation": a.get("elevationGain"),
             "trainingLoad": a.get("activityTrainingLoad"),
+            "vo2max": a.get("vO2MaxValue"),
+            "aerobicTE": a.get("aerobicTrainingEffect"),
+            "anaerobicTE": a.get("anaerobicTrainingEffect"),
+            "zones": [round((a.get(f"hrTimeInZone_{z}") or 0) / 60, 1) for z in range(1, 6)],
         })
     return out
 
@@ -159,7 +169,8 @@ def main():
 
     acts = {a["id"]: a for a in data["activities"]}
     new_acts = []
-    for a in fetch_activities(g, 200 if first_run else 30):
+    # 100 senaste hämtas varje gång (ett enda anrop) så att nya fält fylls i även för äldre pass
+    for a in fetch_activities(g, 300 if first_run else 100):
         if a["id"] not in acts:
             new_acts.append(a)
         acts[a["id"]] = a

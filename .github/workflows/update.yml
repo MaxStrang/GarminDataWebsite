@@ -2,15 +2,18 @@ name: Uppdatera Garmin-data
 
 on:
   schedule:
-    # Varje timme 06–23 svensk tid (cron är i UTC)
+    # Varje timme 06–23 svensk tid (cron är i UTC). GitHub kan fördröja körningar några minuter.
     - cron: "17 5-22 * * *"
   push:
-    branches: [main]
+    branches: [main]      # publicera om sidan när du ändrar koden
   workflow_dispatch:
     inputs:
       backfill_days:
         description: "Antal dagar att hämta första gången"
         default: "90"
+      refresh_days:
+        description: "Antal dagar att hämta om (sätt t.ex. 90 en gång för att fylla i nya fält)"
+        default: "3"
 
 permissions:
   contents: write
@@ -44,6 +47,7 @@ jobs:
 
       - run: pip install -r requirements.txt
 
+      # Datan bor på grenen "data" (en enda commit som skrivs över) så att repot inte växer.
       - name: Hämta sparad data
         run: |
           mkdir -p store
@@ -60,6 +64,7 @@ jobs:
           GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           BACKFILL_DAYS: ${{ github.event.inputs.backfill_days || '90' }}
+          REFRESH_DAYS: ${{ github.event.inputs.refresh_days || '3' }}
           STORE_DIR: store
         run: python scripts/fetch.py
 
