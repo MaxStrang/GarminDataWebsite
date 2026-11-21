@@ -83,6 +83,8 @@ jobs:
           mkdir -p _site
           cp -r docs/* _site/
           cp store/data.enc _site/data.enc
+          # Versionsnummer i filnamnen så att webbläsare inte visar gammal CSS/JS
+          sed -i "s/__V__/${GITHUB_SHA::7}/g" _site/index.html
 
       - uses: actions/upload-pages-artifact@v3
         with:
