@@ -10,16 +10,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=__V__">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <!-- Låsskärm -->
   <section id="lock" class="lock">
     <form id="lockForm" class="lock-card">
-      <svg class="lock-mark" viewBox="0 0 64 64" aria-hidden="true">
-        <circle cx="32" cy="32" r="28" /><circle cx="32" cy="32" r="20" /><circle cx="32" cy="32" r="12" />
-      </svg>
+      <span class="lock-logo" data-logo></span>
       <h1>Hälsa</h1>
       <p class="muted">Din träning, sömn och återhämtning. Datan är krypterad, så ange ditt lösenord.</p>
       <label class="sr" for="pw">Lösenord</label>
@@ -34,7 +32,7 @@
     <!-- Sidopanel -->
     <aside class="side">
       <div class="brand">
-        <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28" /><circle cx="32" cy="32" r="20" /><circle cx="32" cy="32" r="12" /></svg>
+        <span class="brand-logo" data-logo></span>
         <span>Hälsa</span>
       </div>
       <nav class="nav" id="nav">
@@ -48,6 +46,7 @@
       <section class="coach" aria-label="Coach">
         <h2>Coachen säger</h2>
         <ul id="coach"></ul>
+        <button class="praise-btn" data-praise>Ge mig beröm</button>
       </section>
       <footer class="side-foot">
         <span id="updated"></span>
@@ -75,12 +74,13 @@
           </div>
           <div class="rings" id="rings"></div>
         </div>
-        <div class="coach-mobile"><h2>Coachen säger</h2><ul id="coachMobile"></ul></div>
+        <div class="coach-mobile"><h2>Coachen säger</h2><ul id="coachMobile"></ul><button class="praise-btn" data-praise>Ge mig beröm</button></div>
         <div class="today" id="tiles"></div>
         <figure class="panel">
           <figcaption>Träningsåret <span>minuter per dag, de senaste 53 veckorna</span></figcaption>
           <div class="heat-wrap"><div class="heat" id="heat"></div></div>
           <div class="heat-legend" id="heatLegend"></div>
+          <div class="prof-lane" id="profLane"></div>
         </figure>
       </section>
 
@@ -98,7 +98,7 @@
 
       <!-- Sömn -->
       <section id="somn" class="sec">
-        <h2 class="sec-title">Sömn</h2>
+        <h2 class="sec-title" data-moon>Sömn</h2>
         <div class="grid">
           <figure class="panel"><figcaption>Sömnfaser <span>timmar per natt</span></figcaption><div class="plot"><canvas id="cSleep"></canvas></div></figure>
           <figure class="panel"><figcaption>Sovtider <span>från läggdags till uppvaknande</span></figcaption><div class="plot"><canvas id="cSchedule"></canvas></div></figure>
@@ -148,6 +148,7 @@
   </div>
 
   <div id="tip" class="tip" hidden></div>
-  <script src="app.js"></script>
+  <script src="mascots.js?v=__V__"></script>
+  <script src="app.js?v=__V__"></script>
 </body>
 </html>
