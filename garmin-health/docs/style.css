@@ -1,0 +1,73 @@
+:root {
+  color-scheme: dark;
+  --bg: #121211;
+  --surface-1: #1a1a19;
+  --border: #2a2a28;
+  --grid: #262624;
+  --text-primary: #f0efec;
+  --text-secondary: #c3c2b7;
+  --text-muted: #8d8c84;
+  --series-1: #3987e5; /* blå */
+  --series-2: #d95926; /* orange */
+  --series-3: #199e70; /* aqua */
+  --series-4: #c98500; /* gul */
+  --good: #0ca30c;
+  --critical: #e66767;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--text-primary); }
+h1 { font-size: 1.5rem; margin: 0; letter-spacing: -0.01em; }
+h2 { font-size: 1rem; font-weight: 600; color: var(--text-secondary); margin: 2rem 0 .75rem; text-transform: uppercase; letter-spacing: .06em; }
+.muted { color: var(--text-muted); margin: .25rem 0 0; font-size: .85rem; }
+.err { color: var(--critical); font-size: .9rem; }
+
+/* Låsskärm */
+.lock { min-height: 100vh; display: grid; place-items: center; padding: 1rem; }
+.lock-card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; padding: 2rem; width: min(360px, 100%); display: grid; gap: .9rem; }
+input[type=password] { background: var(--bg); color: var(--text-primary); border: 1px solid var(--border); border-radius: 8px; padding: .7rem .8rem; font-size: 1rem; }
+.check { font-size: .85rem; color: var(--text-secondary); display: flex; gap: .5rem; align-items: center; }
+button { font: inherit; cursor: pointer; }
+.lock-card button { background: var(--series-1); color: #fff; border: 0; border-radius: 8px; padding: .7rem; font-weight: 600; }
+
+/* Layout */
+main { max-width: 1200px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; }
+.controls { display: flex; gap: .5rem; align-items: center; }
+.seg { display: inline-flex; background: var(--surface-1); border: 1px solid var(--border); border-radius: 9px; padding: 3px; }
+.seg button { background: none; border: 0; color: var(--text-secondary); padding: .4rem .75rem; border-radius: 6px; font-size: .85rem; }
+.seg button.on { background: var(--border); color: var(--text-primary); }
+.ghost { background: none; border: 1px solid var(--border); color: var(--text-secondary); border-radius: 8px; padding: .45rem .75rem; font-size: .85rem; }
+
+/* Nyckeltal */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: .75rem; margin-top: 1.25rem; }
+.tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: .9rem 1rem; }
+.tile .label { font-size: .78rem; color: var(--text-muted); }
+.tile .value { font-size: 1.75rem; font-weight: 650; margin-top: .2rem; font-variant-numeric: tabular-nums; }
+.tile .value small { font-size: .9rem; color: var(--text-secondary); font-weight: 500; margin-left: .2rem; }
+.tile .sub { font-size: .78rem; color: var(--text-secondary); margin-top: .2rem; }
+.bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: .5rem; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--series-1); border-radius: 2px; }
+
+/* Diagram */
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: .75rem; }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; margin: 0; }
+.card.wide { grid-column: 1 / -1; }
+figcaption { font-size: .9rem; font-weight: 600; margin-bottom: .6rem; }
+figcaption span { font-weight: 400; color: var(--text-muted); font-size: .78rem; margin-left: .35rem; }
+.plot { position: relative; height: 220px; }
+
+/* Tabell */
+.table-wrap { overflow-x: auto; padding: 0; }
+table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+th, td { padding: .6rem 1rem; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+th { color: var(--text-muted); font-weight: 500; font-size: .78rem; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: 0; }
+
+@media (max-width: 520px) {
+  .grid { grid-template-columns: 1fr; }
+  .plot { height: 190px; }
+  .tile .value { font-size: 1.45rem; }
+}

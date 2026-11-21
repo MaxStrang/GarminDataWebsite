@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#121211">
+  <title>Hälsa</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- Låsskärm -->
+  <section id="lock" class="lock">
+    <form id="lockForm" class="lock-card">
+      <h1>Hälsa</h1>
+      <p class="muted">Datan är krypterad. Ange ditt lösenord.</p>
+      <input id="pw" type="password" autocomplete="current-password" placeholder="Lösenord" required>
+      <label class="check"><input id="remember" type="checkbox" checked> Kom ihåg på den här enheten</label>
+      <button type="submit">Lås upp</button>
+      <p id="lockErr" class="err" hidden>Fel lösenord eller ingen data ännu.</p>
+    </form>
+  </section>
+
+  <main id="app" hidden>
+    <header class="top">
+      <div>
+        <h1>Hälsa</h1>
+        <p class="muted" id="updated"></p>
+      </div>
+      <div class="controls">
+        <div class="seg" id="range" role="group" aria-label="Tidsperiod">
+          <button data-days="7">7 d</button>
+          <button data-days="30" class="on">30 d</button>
+          <button data-days="90">90 d</button>
+          <button data-days="365">1 år</button>
+        </div>
+        <button id="logout" class="ghost" title="Lås">Lås</button>
+      </div>
+    </header>
+
+    <section class="tiles" id="tiles"></section>
+
+    <h2>Träning</h2>
+    <div class="grid">
+      <figure class="card wide"><figcaption>Träningstid per vecka <span>minuter</span></figcaption><div class="plot"><canvas id="cTraining"></canvas></div></figure>
+      <figure class="card"><figcaption>Steg per dag <span>streckad linje = mål</span></figcaption><div class="plot"><canvas id="cSteps"></canvas></div></figure>
+      <figure class="card"><figcaption>Intensitetsminuter <span>per dag</span></figcaption><div class="plot"><canvas id="cIntensity"></canvas></div></figure>
+    </div>
+
+    <h2>Sömn</h2>
+    <div class="grid">
+      <figure class="card"><figcaption>Sömnfaser <span>timmar</span></figcaption><div class="plot"><canvas id="cSleep"></canvas></div></figure>
+      <figure class="card"><figcaption>Sömnpoäng <span>0–100</span></figcaption><div class="plot"><canvas id="cSleepScore"></canvas></div></figure>
+    </div>
+
+    <h2>Hälsa</h2>
+    <div class="grid">
+      <figure class="card"><figcaption>Vilopuls <span>slag/min</span></figcaption><div class="plot"><canvas id="cRHR"></canvas></div></figure>
+      <figure class="card"><figcaption>HRV <span>ms, nattsnitt</span></figcaption><div class="plot"><canvas id="cHRV"></canvas></div></figure>
+      <figure class="card"><figcaption>Body Battery <span>lägsta–högsta per dag</span></figcaption><div class="plot"><canvas id="cBB"></canvas></div></figure>
+      <figure class="card"><figcaption>Stress <span>dagssnitt</span></figcaption><div class="plot"><canvas id="cStress"></canvas></div></figure>
+    </div>
+
+    <h2>Senaste aktiviteter</h2>
+    <div class="card table-wrap">
+      <table id="acts">
+        <thead><tr><th>Datum</th><th>Aktivitet</th><th class="num">Distans</th><th class="num">Tid</th><th class="num">Snittpuls</th><th class="num">kcal</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

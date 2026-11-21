@@ -1,0 +1,4 @@
+garminconnect>=0.3.2
+curl_cffi
+cryptography
+requests

@@ -1,0 +1,5 @@
+store/
+docs/data.enc
+_site/
+__pycache__/
+.venv/
