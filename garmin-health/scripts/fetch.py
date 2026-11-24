@@ -183,6 +183,15 @@ def main():
 
     persist_tokens()
 
+    # Token som låter sidans "Uppdatera nu"-knapp starta en körning. Ligger krypterad i data.enc.
+    if os.environ.get("DISPATCH_TOKEN"):
+        data["dispatch"] = {"token": os.environ["DISPATCH_TOKEN"], "repo": os.environ.get("GITHUB_REPOSITORY", "")}
+    else:
+        data.pop("dispatch", None)
+
+    if os.environ.get("TEST_NOTIFY") == "true":
+        notify.send("Testnotis 🔔", "Det fungerar! Här kommer dina hälsonotiser.", "bell")
+
     if first_run or snapshot(data) != before:
         data["updated"] = datetime.now(TZ).isoformat(timespec="minutes")
         save_encrypted(str(DATA_FILE), data, PASSWORD)

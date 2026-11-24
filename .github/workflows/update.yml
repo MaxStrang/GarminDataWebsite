@@ -11,6 +11,10 @@ on:
       backfill_days:
         description: "Antal dagar att hämta första gången"
         default: "90"
+      test_notify:
+        description: "Skicka en testnotis till ntfy"
+        type: boolean
+        default: false
       refresh_days:
         description: "Antal dagar att hämta om (sätt t.ex. 90 en gång för att fylla i nya fält)"
         default: "3"
@@ -66,6 +70,8 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           BACKFILL_DAYS: ${{ github.event.inputs.backfill_days || '90' }}
           REFRESH_DAYS: ${{ github.event.inputs.refresh_days || '3' }}
+          DISPATCH_TOKEN: ${{ secrets.DISPATCH_TOKEN }}
+          TEST_NOTIFY: ${{ github.event.inputs.test_notify }}
           STORE_DIR: store
         run: python scripts/fetch.py
 

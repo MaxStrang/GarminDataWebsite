@@ -14,6 +14,7 @@ async function decrypt(blob, password) {
 }
 
 const PW_KEY = "halsa-pw";
+let PASSWORD = null;
 const store = {
   get: () => { try { return localStorage.getItem(PW_KEY); } catch { return null; } },
   set: (v) => { try { localStorage.setItem(PW_KEY, v); } catch {} },
@@ -25,6 +26,7 @@ async function unlock(password, remember) {
   if (!res.ok) throw new Error("Ingen data");
   const data = await decrypt(await res.json(), password);
   if (remember) store.set(password);
+  PASSWORD = password;
   return data;
 }
 
@@ -321,8 +323,10 @@ function renderHeat() {
     <span><b>${active}</b> träningsdagar</span>
     <span><b>${nf.format(Math.round(total / 60))}</b> timmar totalt</span>
     <span>Längsta svit: <b>${longestStreak(by, start, end)}</b> dagar</span>`;
-  HEAT = { days: active, hours: Math.round(total / 60), streak: longestStreak(by, start, end) };
-  startProfessor(HEAT);
+  // Samma objekt uppdateras så att professorn räknar med ny data efter "Uppdatera nu"
+  const firstTime = HEAT.days === 0 && HEAT.hours === 0;
+  Object.assign(HEAT, { days: active, hours: Math.round(total / 60), streak: longestStreak(by, start, end) });
+  if (firstTime) startProfessor(HEAT);
 }
 function longestStreak(by, start, end) {
   let best = 0, cur = 0;
@@ -686,8 +690,10 @@ function setupNav() {
 // =====================================================================
 //  Start
 // =====================================================================
+let listenersReady = false;
 function show(data) {
   DATA = data;
+  TODAY = iso(new Date());
   const keys = Object.keys(DATA.days).sort();
   if (keys.length && keys[keys.length - 1] < TODAY) TODAY = keys[keys.length - 1] > addDays(TODAY, -2) ? TODAY : keys[keys.length - 1];
   $("#lock").hidden = true;
@@ -698,8 +704,67 @@ function show(data) {
   setupChartDefaults();
   renderHero(); renderCoach(); renderTiles(); renderHeat(); renderRecords(); renderActivities();
   renderCharts();
+  $("#refreshBtn").hidden = !DATA.dispatch?.token;
+  if (listenersReady) return;
+  listenersReady = true;
   setupTooltip(); setupNav();
   document.querySelectorAll("[data-praise]").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); praiseTour(buildPraiseStops()); }));
+  $("#refreshBtn").addEventListener("click", refreshNow);
+}
+
+// =====================================================================
+//  "Uppdatera nu": startar GitHub-workflowet och laddar in ny data
+// =====================================================================
+async function refreshNow() {
+  const btn = $("#refreshBtn"), { token, repo } = DATA.dispatch || {};
+  if (!token || btn.classList.contains("busy")) return;
+  const label = (t) => (btn.querySelector("span").textContent = t);
+  const gh = (path, opts = {}) => fetch(`https://api.github.com/repos/${repo}${path}`, {
+    ...opts, headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", ...(opts.headers || {}) },
+  });
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const before = DATA.updated;
+  const started = Date.now() - 5000;
+  btn.classList.add("busy");
+  try {
+    label("Startar…");
+    const r = await gh("/actions/workflows/update.yml/dispatches", { method: "POST", body: JSON.stringify({ ref: "main" }) });
+    if (r.status !== 204) throw new Error(r.status === 401 ? "Token ogiltig eller utgången" : `GitHub svarade ${r.status}`);
+
+    // Hitta körningen vi just startade och följ den
+    let run = null;
+    for (let i = 0; i < 20 && !run; i++) {
+      await wait(3000);
+      const runs = await (await gh("/actions/runs?event=workflow_dispatch&per_page=5")).json();
+      run = (runs.workflow_runs || []).find((x) => new Date(x.created_at).getTime() >= started);
+    }
+    if (!run) throw new Error("Hittade inte körningen");
+    while (true) {
+      const cur = await (await gh(`/actions/runs/${run.id}`)).json();
+      if (cur.status === "completed") {
+        if (cur.conclusion !== "success") throw new Error("Körningen misslyckades");
+        break;
+      }
+      const jobs = await (await gh(`/actions/runs/${run.id}/jobs`)).json();
+      const deploying = (jobs.jobs || []).some((j) => j.name === "deploy" && j.status !== "queued");
+      label(cur.status === "queued" ? "I kö hos GitHub…" : deploying ? "Publicerar…" : "Hämtar från Garmin…");
+      await wait(4000);
+    }
+
+    // Vänta tills den nya filen syns på sidan och rita om
+    label("Laddar in…");
+    for (let i = 0; i < 12; i++) {
+      const fresh = await unlock(PASSWORD, false);
+      if (fresh.updated !== before) { show(fresh); label("Klart, ny data!"); return; }
+      await wait(5000);
+    }
+    label(`Inget nytt hos Garmin sedan ${new Date(before).toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" })}`);
+  } catch (e) {
+    label(e.message);
+  } finally {
+    btn.classList.remove("busy");
+    setTimeout(() => label("Uppdatera nu"), 6000);
+  }
 }
 
 $("#lockForm").addEventListener("submit", async (e) => {
