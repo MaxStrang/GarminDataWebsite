@@ -692,7 +692,9 @@ function show(data) {
   if (keys.length && keys[keys.length - 1] < TODAY) TODAY = keys[keys.length - 1] > addDays(TODAY, -2) ? TODAY : keys[keys.length - 1];
   $("#lock").hidden = true;
   $("#app").hidden = false;
-  $("#updated").textContent = data.updated ? "Uppdaterad " + new Date(data.updated).toLocaleString("sv-SE", { weekday: "short", hour: "2-digit", minute: "2-digit" }) : "";
+  const stamp = data.updated ? "Uppdaterad " + new Date(data.updated).toLocaleString("sv-SE", { weekday: "short", hour: "2-digit", minute: "2-digit" }) : "";
+  $("#updated").textContent = stamp;
+  $("#updatedTop").textContent = stamp;
   setupChartDefaults();
   renderHero(); renderCoach(); renderTiles(); renderHeat(); renderRecords(); renderActivities();
   renderCharts();
