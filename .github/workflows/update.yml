@@ -33,9 +33,6 @@ jobs:
   update:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v5
 
@@ -94,5 +91,14 @@ jobs:
         with:
           path: garmin-health/_site
 
+  # Publiceringen körs som ett eget jobb som startar när bygget är helt klart.
+  # I samma jobb hinner GitHubs API ibland inte visa den nyss uppladdade artefakten.
+  deploy:
+    needs: update
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
       - id: deploy
         uses: actions/deploy-pages@v5
