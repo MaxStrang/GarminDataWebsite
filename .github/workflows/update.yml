@@ -2,8 +2,8 @@ name: Uppdatera Garmin-data
 
 on:
   schedule:
-    # Varje timme 06–23 svensk tid (cron är i UTC). GitHub kan fördröja körningar några minuter.
-    - cron: "17 5-22 * * *"
+    # Var 30:e minut 06–23 svensk tid (cron är i UTC). GitHub kan fördröja eller hoppa över körningar.
+    - cron: "17,47 5-22 * * *"
   push:
     branches: [main]      # publicera om sidan när du ändrar koden
   workflow_dispatch:
@@ -51,8 +51,12 @@ jobs:
       - name: Hämta sparad data
         run: |
           mkdir -p store
-          if git fetch --depth=1 origin data 2>/dev/null; then
-            git archive FETCH_HEAD | tar -x -C store
+          # Kör git archive från repots rot, annars packas bara undermappen garmin-health upp
+          if git ls-remote --exit-code --heads origin data >/dev/null; then
+            git fetch --depth=1 origin data
+            git -C "$GITHUB_WORKSPACE" archive FETCH_HEAD | tar -x -C store
+          else
+            echo "Ingen data-gren än, första körningen."
           fi
           ls -la store
 
