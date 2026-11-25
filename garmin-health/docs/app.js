@@ -735,7 +735,14 @@ async function refreshNow() {
   try {
     label("Startar…");
     const r = await gh("/actions/workflows/update.yml/dispatches", { method: "POST", body: JSON.stringify({ ref: "main" }) });
-    if (r.status !== 204) throw new Error(r.status === 401 ? "Token ogiltig eller utgången" : `GitHub svarade ${r.status}`);
+    if (r.status !== 204) {
+      const msg = (await r.json().catch(() => ({}))).message || "";
+      console.warn("GitHub:", r.status, msg);
+      throw new Error(r.status === 401 ? "Token ogiltig eller utgången"
+        : r.status === 403 ? "Token saknar Actions: Read and write"
+        : r.status === 404 ? "Token har inte tillgång till repot"
+        : `GitHub svarade ${r.status}`);
+    }
 
     // Hitta körningen vi just startade och följ den
     let run = null;
