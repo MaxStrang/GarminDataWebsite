@@ -10,7 +10,9 @@ TYPE_SV = {
     "running": "löpning", "trail_running": "trailrunning", "treadmill_running": "löpband",
     "cycling": "cykling", "indoor_cycling": "inomhuscykling", "walking": "promenad",
     "hiking": "vandring", "strength_training": "styrketräning", "lap_swimming": "simning",
-    "golf": "golf", "yoga": "yoga",
+    "golf": "golf", "yoga": "yoga", "skating_ws": "skridskor", "inline_skating": "inlines",
+    "cross_country_skiing_ws": "längdskidor", "resort_skiing_snowboarding_ws": "utförsåkning",
+    "indoor_rowing": "roddmaskin", "hiit": "HIIT", "cardio": "konditionsträning",
 }
 
 
@@ -34,9 +36,13 @@ def fmt_h(sec):
     return f"{sec // 3600}h {sec % 3600 // 60:02d}m"
 
 
-def week_km(data, now):
+def week_summary(data, now):
     monday = (now - timedelta(days=now.weekday())).date().isoformat()
-    return sum(a["distanceKm"] for a in data["activities"] if (a["start"] or "")[:10] >= monday)
+    week = [a for a in data["activities"] if (a["start"] or "")[:10] >= monday]
+    km = sum(a["distanceKm"] or 0 for a in week)
+    mins = sum(a["durationMin"] or 0 for a in week)
+    text = f"Veckan hittills: {len(week)} pass, {mins:.0f} min"
+    return text + (f", {km:.1f} km." if km >= 1 else ".")
 
 
 def run(data, new_acts, now: datetime):
@@ -55,7 +61,7 @@ def run(data, new_acts, now: datetime):
             parts.append(f"{a['distanceKm']:.1f} km")
         if a.get("avgHR"):
             parts.append(f"snittpuls {a['avgHR']:.0f}")
-        send("Snyggt jobbat! 💪", ", ".join(parts) + f". Veckan hittills: {week_km(data, now):.1f} km.", "muscle")
+        send("Snyggt jobbat! 💪", ", ".join(parts) + ". " + week_summary(data, now), "muscle")
         notified.add(a["id"])
     st["notified"] = sorted(notified)[-500:]
 
