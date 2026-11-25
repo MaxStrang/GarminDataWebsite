@@ -83,6 +83,7 @@ const TYPE_SV = {
   hiking: "Vandring", strength_training: "Styrka", lap_swimming: "Simning", open_water_swimming: "Utomhussim",
   golf: "Golf", yoga: "Yoga", cardio: "Kondition", hiit: "HIIT", indoor_rowing: "Roddmaskin",
   cross_country_skiing_ws: "Längdskidor", resort_skiing_snowboarding_ws: "Utförsåkning",
+  skating_ws: "Skridskor", inline_skating: "Inlines",
 };
 const typeName = (t) => TYPE_SV[t] || (t || "Övrigt").replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
 const isRun = (a) => /running/.test(a.type || "");
@@ -704,7 +705,7 @@ function show(data) {
   setupChartDefaults();
   renderHero(); renderCoach(); renderTiles(); renderHeat(); renderRecords(); renderActivities();
   renderCharts();
-  $("#refreshBtn").hidden = !DATA.dispatch?.token;
+  $("#refreshBtn").hidden = false;
   if (listenersReady) return;
   listenersReady = true;
   setupTooltip(); setupNav();
@@ -717,8 +718,13 @@ function show(data) {
 // =====================================================================
 async function refreshNow() {
   const btn = $("#refreshBtn"), { token, repo } = DATA.dispatch || {};
-  if (!token || btn.classList.contains("busy")) return;
   const label = (t) => (btn.querySelector("span").textContent = t);
+  if (btn.classList.contains("busy")) return;
+  if (!token) {
+    label("Saknar DISPATCH_TOKEN i GitHub");
+    setTimeout(() => label("Uppdatera nu"), 5000);
+    return;
+  }
   const gh = (path, opts = {}) => fetch(`https://api.github.com/repos/${repo}${path}`, {
     ...opts, headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", ...(opts.headers || {}) },
   });
