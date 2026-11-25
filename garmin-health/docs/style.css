@@ -111,7 +111,7 @@ main { padding: 1rem clamp(1rem, 3vw, 2.5rem) 4rem; max-width: 1240px; }
   letter-spacing: -0.005em; max-width: 16ch;
   font-variation-settings: "opsz" 60;
 }
-.hero h1 .n { font-variant-numeric: tabular-nums; background: linear-gradient(transparent 78%, rgba(57, 135, 229, .55) 78%); }
+.hero h1 .n { font-variant-numeric: tabular-nums; background: linear-gradient(transparent 78%, rgba(144, 133, 233, .6) 78%); }
 .lede { color: var(--ink-2); font-size: 1.1rem; max-width: 52ch; margin: 1rem 0 0; }
 .rings { display: flex; align-items: center; gap: 1.25rem; }
 .rings svg { width: 190px; height: 190px; }
@@ -246,6 +246,12 @@ td.metric { font-weight: 600; }
 .logo:hover .eye-r { animation: wink .7s ease-in-out; }
 @keyframes blink { 0%, 93%, 100% { transform: scaleY(1); } 95.5% { transform: scaleY(.1); } }
 @keyframes wink { 0%, 100% { transform: scaleY(1); } 40%, 60% { transform: scaleY(.1); } }
+
+/* ---------- Ansiktet i veckoringarna ---------- */
+.ring-face .eye { transform-box: fill-box; transform-origin: center; animation: blink 4.6s infinite; }
+.ring-svg:hover .ring-face .eye-r { animation: wink .7s ease-in-out; }
+.ring-face { animation: faceIn .5s 1s cubic-bezier(.3, 1.6, .5, 1) both; transform-origin: 100px 100px; }
+@keyframes faceIn { from { transform: scale(0); } }
 
 /* ---------- Ringarna ritas upp vid start ---------- */
 .ring-arc { stroke-dashoffset: var(--off); animation: ringIn 1.4s cubic-bezier(.2, .7, .2, 1) both; }

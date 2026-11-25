@@ -249,9 +249,9 @@ function renderHero() {
   const stepAvg = mean(wd.map((d) => d.steps)) || 0, goal = mean(wd.map((d) => d.stepGoal)) || 10000;
   const sleepAvg = mean(wd.map((d) => d.sleepSec)) || 0;
   const rings = [
-    { label: "Träning", v: w.min / 150, txt: `${Math.round(w.min)} / 150 min`, c: C["--series-1"] },
-    { label: "Steg, snitt", v: stepAvg / goal, txt: `${nf.format(Math.round(stepAvg))} / ${nf.format(Math.round(goal))}`, c: C["--series-2"] },
-    { label: "Sömn, snitt", v: sleepAvg / (8 * 3600), txt: `${fmtH(sleepAvg)} / 8h`, c: C["--series-3"] },
+    { label: "Träning", v: w.min / 150, txt: `${Math.round(w.min)} / 150 min`, c: "#9085e9" },
+    { label: "Steg, snitt", v: stepAvg / goal, txt: `${nf.format(Math.round(stepAvg))} / ${nf.format(Math.round(goal))}`, c: "#e87ba4" },
+    { label: "Sömn, snitt", v: sleepAvg / (8 * 3600), txt: `${fmtH(sleepAvg)} / 8h`, c: "#f2b65c" },
   ];
   const R = [82, 64, 46], SW = 14;
   const svg = rings.map((r, i) => {
@@ -260,7 +260,15 @@ function renderHero() {
       <circle class="ring-arc" cx="100" cy="100" r="${R[i]}" fill="none" stroke="${r.c}" stroke-width="${SW}" stroke-linecap="round"
         stroke-dasharray="${circ}" style="--c:${circ};--off:${circ * (1 - frac)}" transform="rotate(-90 100 100)"><title>${r.label}: ${r.txt}</title></circle>`;
   }).join("");
-  $("#rings").innerHTML = `<svg viewBox="0 0 200 200" role="img" aria-label="Veckans mål">${svg}</svg>
+  // Ansiktet i mitten, som i loggan. Stort leende när alla tre målen är nådda.
+  const allDone = rings.every((r) => r.v >= 1);
+  const mouth = allDone
+    ? `<path class="mouth" d="M86 106 Q100 126 114 106 Z" fill="var(--ink)"/>`
+    : `<path class="mouth" d="M88 108 Q100 120 112 108" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/>`;
+  const face = `<g class="ring-face"><title>${allDone ? "Alla veckans mål klara!" : "Veckans mål"}</title>
+    <ellipse class="eye eye-l" cx="90" cy="94" rx="4.4" ry="5.2" fill="var(--ink)"/>
+    <ellipse class="eye eye-r" cx="110" cy="94" rx="4.4" ry="5.2" fill="var(--ink)"/>${mouth}</g>`;
+  $("#rings").innerHTML = `<svg class="ring-svg" viewBox="0 0 200 200" role="img" aria-label="Veckans mål">${svg}${face}</svg>
     <div class="ring-legend">${rings.map((r) => `<div><i style="background:${r.c}"></i><b>${Math.round(r.v * 100)} %</b><span>${r.label}: ${r.txt}</span></div>`).join("")}</div>`;
 }
 function isoWeek(s) {
