@@ -145,6 +145,23 @@ def fetch_activities(g: Garmin, limit: int) -> list:
     return out
 
 
+def check_dispatch_token(token: str, repo: str):
+    """Testar att token får starta workflowet, utan att starta något: en gren som inte finns ger 422 om behörigheten finns."""
+    import requests
+    try:
+        r = requests.post(
+            f"https://api.github.com/repos/{repo}/actions/workflows/update.yml/dispatches",
+            headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"},
+            json={"ref": "finns-inte-token-test"}, timeout=10)
+        if r.status_code == 422:
+            print("DISPATCH_TOKEN: OK, får starta workflowet.")
+        else:
+            need = r.headers.get("X-Accepted-GitHub-Permissions", "-")
+            print(f"DISPATCH_TOKEN: FEL {r.status_code}: {r.json().get('message', '')} | krävs: {need}")
+    except Exception as e:
+        print(f"DISPATCH_TOKEN: kunde inte testas ({e})")
+
+
 # ---------- main ----------
 
 def snapshot(data) -> str:
@@ -186,6 +203,7 @@ def main():
     # Token som låter sidans "Uppdatera nu"-knapp starta en körning. Ligger krypterad i data.enc.
     if os.environ.get("DISPATCH_TOKEN"):
         data["dispatch"] = {"token": os.environ["DISPATCH_TOKEN"], "repo": os.environ.get("GITHUB_REPOSITORY", "")}
+        check_dispatch_token(os.environ["DISPATCH_TOKEN"], os.environ.get("GITHUB_REPOSITORY", ""))
     else:
         data.pop("dispatch", None)
 
